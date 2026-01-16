@@ -8,8 +8,8 @@ import sys
 
 # 1. Setup requirements
 def install_dependencies():
-    print("Installing system dependencies (Node.js)...")
-    !curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    print("Installing system dependencies (Node.js 20)...")
+    !curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     !sudo apt-get install -y nodejs
     print("Installing Python dependencies...")
     !pip install -q fastapi uvicorn pyngrok nest-asyncio transformers torch accelerate pillow opencc python-multipart python-dotenv bitsandbytes
