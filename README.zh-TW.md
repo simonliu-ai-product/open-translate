@@ -4,6 +4,12 @@
 
 基於 Google **TranslateGemma** 的開源機器翻譯服務，支援文字與圖片翻譯功能。
 
+## 介面預覽
+
+| 文字翻譯 | 圖片翻譯 |
+| :---: | :---: |
+| ![文字翻譯預覽](./snapshot/frontend-page-demo.png) | ![圖片翻譯預覽](./snapshot/frontend-page-img-demo.png) |
+
 ## 功能特色
 
 - **文字翻譯**：支援 55 種以上語言的高品質對譯。

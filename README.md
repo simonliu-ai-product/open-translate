@@ -4,6 +4,12 @@
 
 An open-source machine translation service based on Google's **TranslateGemma**, featuring both text and image translation capabilities.
 
+## Screenshots
+
+| Text Translation | Image Translation |
+| :---: | :---: |
+| ![Text Demo](./snapshot/frontend-page-demo.png) | ![Image Demo](./snapshot/frontend-page-img-demo.png) |
+
 ## Features
 
 - **Text Translation**: High-quality translation across 55+ languages.
