@@ -1,9 +1,12 @@
 # Open Translate - Full Stack Google Colab Runner
 # Repository: https://github.com/simonliu-ai-product/open-translate.git
-# This script prepares the environment and launches the server directly from the repository code.
+# This script builds the environment, starts the server, and finally exposes it via ngrok once ready.
 
 import os
-import sys
+import time
+import subprocess
+import requests
+import threading
 
 # 1. Setup requirements
 def install_dependencies():
@@ -35,30 +38,73 @@ def main():
         %cd open-translate
     
     # 4. Build Frontend
-    print("Building frontend...")
+    print("Building frontend... (This takes about 1-2 minutes)")
     if os.path.exists("frontend"):
         !cd frontend && npm install && npm run build
-        # Copy dist to root for the backend to find it easily
         !cp -r frontend/dist .
     else:
-        print("Warning: 'frontend' directory not found. API only mode.")
+        print("Warning: 'frontend' directory not found.")
 
-    # 5. Setup Ngrok
+    # 5. Start Server in background
+    print("\nStarting server and loading TranslateGemma model...")
+    print("(This will take a few minutes, ngrok will start once the model is ready)")
+    
+    server_process = subprocess.Popen(
+        ["python", "backend/main.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1
+    )
+
+    # Thread to print server logs in real-time
+    def print_logs(proc):
+        for line in proc.stdout:
+            print(f"[Server] {line.strip()}")
+    
+    log_thread = threading.Thread(target=print_logs, args=(server_process,))
+    log_thread.daemon = True
+    log_thread.start()
+
+    # 6. Wait for server to be healthy
+    max_retries = 60
+    ready = False
+    for i in range(max_retries):
+        try:
+            # Check the health endpoint
+            response = requests.get("http://localhost:8000/api/health", timeout=2)
+            if response.status_code == 200 and response.json().get("model_loaded"):
+                ready = True
+                break
+        except:
+            pass
+        time.sleep(10)
+        if i % 3 == 0:
+            print(f"Waiting for model to load... ({i*10}s)")
+
+    if not ready:
+        print("Error: Server timed out during model loading.")
+        server_process.terminate()
+        return
+
+    # 7. Finally, setup Ngrok
     from pyngrok import ngrok
     import nest_asyncio
     
     ngrok.set_auth_token(ngrok_token)
     public_url = ngrok.connect(8000).public_url
     
-    print("\n" + "="*50)
-    print(f"OPEN TRANSLATE UI: {public_url}")
-    print("="*50)
-    print("\nStarting server from backend/main.py...")
+    print("\n" + "="*60)
+    print("🎉 MODEL IS READY AND STANDBY!")
+    print(f"👉 OPEN TRANSLATE UI: {public_url}")
+    print("="*60 + "\n")
 
-    # 6. Run the actual backend script
-    nest_asyncio.apply()
-    # We run it using the python command to ensure it uses the file in the folder
-    !python backend/main.py
+    # Keep the main thread alive while the server is running
+    try:
+        server_process.wait()
+    except KeyboardInterrupt:
+        print("Shutting down...")
+        server_process.terminate()
 
 if __name__ == "__main__":
     main()
