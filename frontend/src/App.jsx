@@ -5,7 +5,7 @@ import { Languages, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 const LANGUAGES = [
   { code: 'en', name: 'English' },
   { code: 'zh-TW', name: 'Traditional Chinese' },
-  { code: 'zh-CN', name: 'Simplified Chinese' },
+  { code: 'zh', name: 'Simplified Chinese' },
   { code: 'ja', name: 'Japanese' },
   { code: 'ko', name: 'Korean' },
   { code: 'de', name: 'German' },
