@@ -45,16 +45,18 @@ def main():
     else:
         print("Warning: 'frontend' directory not found.")
 
-    # 5. Start Server in background
-    print("\nStarting server and loading TranslateGemma model...")
-    print("(This will take a few minutes, ngrok will start once the model is ready)")
+    # 6. Run the actual backend script
+    # We set PYTHONPATH to include the backend directory for correct imports
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.path.join(os.getcwd(), "backend")
     
     server_process = subprocess.Popen(
         ["python", "backend/main.py"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1
+        bufsize=1,
+        env=env
     )
 
     # Thread to print server logs in real-time

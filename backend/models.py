@@ -1,6 +1,11 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from datetime import datetime
-from .database import Base
+
+# Robust import for database Base
+try:
+    from .database import Base
+except (ImportError, ValueError):
+    from database import Base
 
 class TranslationLog(Base):
     __tablename__ = "translation_logs"

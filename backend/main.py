@@ -12,11 +12,12 @@ from PIL import Image
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
-# Database imports - Handling both package and direct script execution
+# Database imports - Robust handling for both package and direct script execution
 try:
     from . import models, database
 except (ImportError, ValueError):
-    import models, database
+    import models
+    import database
 
 load_dotenv()
 
