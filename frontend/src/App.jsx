@@ -76,7 +76,7 @@ function App() {
           <Languages className="me-3 text-primary" size={48} />
           Open Translate
         </h1>
-        <p className="lead text-muted">Powered by Google TranslateGemma</p>
+        <p className="lead text-muted">Powered by Google TranslateGemma Model</p>
       </header>
 
       <div className="row g-4">

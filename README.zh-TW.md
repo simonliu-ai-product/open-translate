@@ -1,5 +1,7 @@
 # Open Translate (TranslateGemma) - 繁體中文版本
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simonliu-ai-product/open-translate/blob/main/open_translate_project_workflow.ipynb)
+
 基於 Google **TranslateGemma** 的開源機器翻譯服務，支援文字與圖片翻譯功能。
 
 ## 功能特色

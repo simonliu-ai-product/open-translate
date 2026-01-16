@@ -1,5 +1,7 @@
 # Open Translate (TranslateGemma)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simonliu-ai-product/open-translate/blob/main/open_translate_project_workflow.ipynb)
+
 An open-source machine translation service based on Google's **TranslateGemma**, featuring both text and image translation capabilities.
 
 ## Features
