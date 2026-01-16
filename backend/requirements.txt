@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+transformers
+torch
+accelerate
+pillow
+opencc
+python-multipart
+python-dotenv
+sqlalchemy
+psycopg2-binary
+pymysql

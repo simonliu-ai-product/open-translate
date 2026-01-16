@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./backend
+    container_name: open-translate-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - MODEL_ID=google/translategemma-4b-it
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: open-translate-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
