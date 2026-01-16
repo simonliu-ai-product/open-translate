@@ -1,7 +1,6 @@
 # Open Translate - Full Stack Google Colab Runner
 # Repository: https://github.com/simonliu-ai-product/open-translate.git
-# This script builds the frontend and runs it along with the backend on Colab.
-# Everything is exposed via a single ngrok tunnel.
+# This script prepares the environment and launches the server directly from the repository code.
 
 import os
 import sys
@@ -12,107 +11,9 @@ def install_dependencies():
     !curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     !sudo apt-get install -y nodejs
     print("Installing Python dependencies...")
-    !pip install -q fastapi uvicorn pyngrok nest-asyncio transformers torch accelerate pillow opencc python-multipart python-dotenv bitsandbytes
+    !pip install -q fastapi uvicorn pyngrok nest-asyncio transformers torch accelerate pillow opencc python-multipart python-dotenv sqlalchemy psycopg2-binary pymysql
 
-# 2. Define the Backend Code
-full_stack_code = """
-import os
-import torch
-import opencc
-import io
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
-from transformers import pipeline
-from PIL import Image
-
-app = FastAPI(title="Open Translate Full Stack")
-
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Configuration
-HF_TOKEN = os.getenv("HF_TOKEN")
-MODEL_ID = "google/translategemma-4b-it"
-converter = opencc.OpenCC('s2twp')
-pipe = None
-
-def get_pipeline():
-    global pipe
-    if pipe is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
-        print(f"Loading model {MODEL_ID} on {device}...")
-        pipe = pipeline(
-            "image-text-to-text",
-            model=MODEL_ID,
-            device=device,
-            torch_dtype=dtype,
-            token=HF_TOKEN,
-            model_kwargs={"low_cpu_mem_usage": True}
-        )
-        print("Model loaded.")
-    return pipe
-
-@app.on_event("startup")
-async def startup_event():
-    print("Pre-loading model...")
-    get_pipeline()
-    print("Model standby.")
-
-class TranslationRequest(BaseModel):
-    text: str
-    source_lang: str = "en"
-    target_lang: str = "zh-TW"
-
-# API Endpoints (Prefix with /api to match frontend expectations)
-@app.post("/api/translate")
-async def translate_text(request: TranslationRequest):
-    p = get_pipeline()
-    messages = [{"role": "user", "content": [{"type": "text", "source_lang_code": request.source_lang, "target_lang_code": request.target_lang, "text": request.text}]}]
-    try:
-        output = p(text=messages, max_new_tokens=512, generate_kwargs={"do_sample": False})
-        translated_text = output[0]["generated_text"][-1]["content"]
-        if "zh-TW" in request.target_lang:
-            translated_text = converter.convert(translated_text)
-        return {"translated_text": translated_text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/translate-image")
-async def translate_image(file: UploadFile = File(...), source_lang: str = Form("en"), target_lang: str = Form("zh-TW") ):
-    p = get_pipeline()
-    try:
-        image = Image.open(io.BytesIO(await file.read()))
-        messages = [{"role": "user", "content": [{"type": "image", "source_lang_code": source_lang, "target_lang_code": target_lang, "image": image}]}]
-        output = p(text=messages, max_new_tokens=256, generate_kwargs={"do_sample": False})
-        translated_text = output[0]["generated_text"][-1]["content"]
-        if "zh-TW" in target_lang:
-            translated_text = converter.convert(translated_text)
-        return {"translated_text": translated_text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Serve Frontend static files
-if os.path.exists("dist"):
-    app.mount("/", StaticFiles(directory="dist", html=True), name="static")
-
-    @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
-        return FileResponse("dist/index.html")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-"""
-
+# 2. Main execution
 def main():
     # 1. Get Tokens
     try:
@@ -137,15 +38,12 @@ def main():
     print("Building frontend...")
     if os.path.exists("frontend"):
         !cd frontend && npm install && npm run build
+        # Copy dist to root for the backend to find it easily
         !cp -r frontend/dist .
     else:
-        print("Warning: 'frontend' directory not found. Only API will be available.")
+        print("Warning: 'frontend' directory not found. API only mode.")
 
-    # 5. Write server script
-    with open("server.py", "w") as f:
-        f.write(full_stack_code)
-
-    # 6. Setup Ngrok
+    # 5. Setup Ngrok
     from pyngrok import ngrok
     import nest_asyncio
     
@@ -155,10 +53,12 @@ def main():
     print("\n" + "="*50)
     print(f"OPEN TRANSLATE UI: {public_url}")
     print("="*50)
-    print("\nStarting server...")
+    print("\nStarting server from backend/main.py...")
 
+    # 6. Run the actual backend script
     nest_asyncio.apply()
-    !python server.py
+    # We run it using the python command to ensure it uses the file in the folder
+    !python backend/main.py
 
 if __name__ == "__main__":
     main()
